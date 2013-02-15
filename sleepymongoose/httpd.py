@@ -74,6 +74,7 @@ class MongoHTTPRequest(BaseHTTPRequestHandler):
     mongos = []
     response_headers = []
     jsonp_callback = None;
+    allowCORS = False;
 
     def _parse_call(self, uri):
         """ 
@@ -174,6 +175,12 @@ class MongoHTTPRequest(BaseHTTPRequestHandler):
 
         return (uri, args, type)
 
+    def do_OPTIONS(self):
+        self.send_response(200, "ok")
+        if (self.allowCORS):
+            self.send_header('Access-Control-Allow-Origin', self.headers.dict['origin'])
+            self.send_header('Access-Control-Allow-Methods', 'POST, GET, OPTIONS')        
+            self.send_header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept')
 
     def do_GET(self):        
         (uri, args, type) = self.process_uri("GET")
@@ -277,6 +284,7 @@ def main():
                 MongoHTTPRequest.mongos = a.split(',')
             if o == "-x" or o == "--xorigin":
                 MongoHTTPRequest.response_headers.append(("Access-Control-Allow-Origin","*"))
+                MongoHTTPRequest.allowCORS = True;
 
     except getopt.GetoptError:
         print "error parsing cmd line args."
